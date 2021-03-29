@@ -1,17 +1,20 @@
-const bcrypt = require('bcryptjs')
+const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 
+const { loginValidate, registerValidate } = require("./validate");
 
 const userController = {
   register: async function (req, res) {
-
-    const selectedUser = await User.findOne({ email: req.body.email})
+    const { error } = registerValidate(req.body);
+    if (error) {
+      return res.status(400).send(error);
+    }
+    const selectedUser = await User.findOne({ email: req.body.email });
 
     if (selectedUser) {
-      return res.status(400).send('Email já existente')
+      return res.status(400).send("Email já existente");
     }
-
 
     const user = new User({
       name: req.body.name,
@@ -26,24 +29,30 @@ const userController = {
     }
   },
   login: async function (req, res) {
-  
-    const selectedUser = await User.findOne({ email: req.body.email})
+    const { error } = loginValidate(req.body);
+    if (error) {
+      return res.status(400).send(error);
+    }
+
+    const selectedUser = await User.findOne({ email: req.body.email });
 
     if (!selectedUser) {
-      return res.status(400).send('Email ou Senha Incorretas')
+      return res.status(400).send("Email ou Senha Incorretas");
     }
 
     const passwordAndUserMatch = bcrypt.compareSync(req.body.password);
-    
+
     if (!passwordAndUserMatch) {
-      return res.status(400).send('Email ou Senha Incorretas')
+      return res.status(400).send("Email ou Senha Incorretas");
     }
 
-    const token = jwt.sign({ _id: selectedUser._id }, process.env.TOKEN_SECRET);
+    const token = jwt.sign(
+      { _id: selectedUser._id, admin: selected_user._id },
+      process.env.TOKEN_SECRET
+    );
 
-    res.header('authoriztion-token', token);
-    res.send('Usuario logado')
-
+    res.header("authoriztion-token", token);
+    res.send("Usuario logado");
   },
 };
 
